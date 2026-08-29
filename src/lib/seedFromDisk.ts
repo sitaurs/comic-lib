@@ -10,12 +10,13 @@ import {
 } from '../import/coverMatcher';
 
 /**
- * Seeder khusus mode dev — memuat `data/library.csv` (118 judul) + `covers/list1..4`
- * (118 cover) langsung dari repo lewat fetch, lalu menjalankan pipeline import
- * yang sama seperti UI Settings (parse → preview → commit → cover match).
+ * Seeder — memuat `data/library.csv` (118 judul) + `covers/list1..4` (118 cover)
+ * lewat fetch, lalu menjalankan pipeline import yang sama seperti UI Settings
+ * (parse → preview → commit → cover match).
  *
- * Hanya untuk uji manual; file ini tidak dipakai di build produksi
- * (aset `data/` & `covers/` tidak ikut dibundel).
+ * Jalan di dev (aset dilayani dari root repo) maupun produksi (aset disalin ke
+ * `dist/` oleh `scripts/copy-seed-assets.mjs`). Karena IndexedDB terisolasi per
+ * browser/profil, tiap perangkat baru men-seed dirinya sendiri sekali.
  */
 export interface SeedReport {
   wiped: boolean;
