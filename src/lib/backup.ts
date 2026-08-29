@@ -240,6 +240,9 @@ export async function exportCsv(): Promise<string> {
       tahun_asli: t.yearOriginal === null ? '' : String(t.yearOriginal),
       tipe: t.type ?? '',
       status: t.statusRaw ?? '',
+      jumlah_chapter: t.totalChapters === null ? '' : String(t.totalChapters),
+      chapter_indo: t.indoChapters === null ? '' : String(t.indoChapters),
+      chapter_sumber: t.chapterSource ?? '',
       author: t.authors.join(', '),
       skor_anilist: t.scoreAnilist === null ? '' : String(t.scoreAnilist),
       skor_mangaupdates: t.scoreMangaupdates === null ? '' : String(t.scoreMangaupdates),
@@ -258,7 +261,7 @@ export async function exportCsv(): Promise<string> {
   });
 
   return Papa.unparse(rows, {
-    // urutan kolom wajib sama dengan parser (22 kolom, spec L117)
+    // urutan kolom wajib sama dengan parser (25 kolom, spec §3.2)
     columns: [...LIBRARY_CSV_HEADER],
     newline: '\n',
   });

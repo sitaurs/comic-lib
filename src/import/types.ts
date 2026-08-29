@@ -17,6 +17,8 @@ export interface ParsedTitle {
   authors: string[];
   scoreAnilist: number | null;
   scoreMangaupdates: number | null;
+  totalChapters: number | null;
+  chapterSource: string | null;
   indoChapters: number | null;
   indoStatus: 'TAMAT' | 'ONGOING' | null;
   synopsisId: string | null;
@@ -55,6 +57,8 @@ export function emptyParsed(sourceRef: string): ParsedTitle {
     authors: [],
     scoreAnilist: null,
     scoreMangaupdates: null,
+    totalChapters: null,
+    chapterSource: null,
     indoChapters: null,
     indoStatus: null,
     synopsisId: null,

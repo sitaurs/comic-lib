@@ -8,6 +8,7 @@ import {
   useTitleCollections,
 } from '../hooks/useLibraryData';
 import { readLinkLabel } from '../lib/readLinks';
+import { chapterCount } from '../lib/filter';
 import { useFilterStore } from '../stores/filterStore';
 import { useLibraryStore } from '../stores/libraryStore';
 import { useUIStore } from '../stores/uiStore';
@@ -110,6 +111,12 @@ export function TitleDetailPage() {
             <span className="rounded-full border border-hairline bg-elevated px-2.5 py-1 text-xs uppercase tracking-wide text-text-secondary">
               {WORK_STATUS_LABELS[title.workStatus]}
             </span>
+            {/* total chapter tersedia (metadata katalog, bukan progress baca) */}
+            {chapterCount(title) !== null && (
+              <span className="rounded-full border border-hairline bg-elevated px-2.5 py-1 text-xs tabular-nums text-text-secondary">
+                {chapterCount(title)}ch
+              </span>
+            )}
             {title.type && (
               <span className="text-xs text-text-muted">
                 {title.type}
@@ -277,7 +284,9 @@ function MetadataTable({ title }: { title: NonNullable<ReturnType<typeof useTitl
       title.scoreMangaupdates !== null ? `${title.scoreMangaupdates}/10` : '—',
     ],
     ['Status mentah', title.statusRaw ?? '—'],
+    ['Total chapter', title.totalChapters !== null ? `${title.totalChapters}ch` : '—'],
     ['Chapter Indo', title.indoChapters !== null ? `${title.indoChapters}ch` : '—'],
+    ['Sumber hitungan chapter', title.chapterSource ?? '—'],
     ['Status Indo', title.indoStatus ?? '—'],
     ['Link baca', title.readUrls.length ? `${title.readUrls.length} sumber` : '—'],
     ['Ditambahkan', new Date(title.createdAt).toLocaleString('id-ID')],

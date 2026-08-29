@@ -184,6 +184,8 @@ function toTitle(parsed: ParsedTitle, id: string, createdAt?: number): Title {
     authors: parsed.authors,
     scoreAnilist: parsed.scoreAnilist,
     scoreMangaupdates: parsed.scoreMangaupdates,
+    totalChapters: parsed.totalChapters,
+    chapterSource: parsed.chapterSource,
     indoChapters: parsed.indoChapters,
     indoStatus: parsed.indoStatus,
     synopsisId: parsed.synopsisId,

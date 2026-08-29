@@ -76,7 +76,7 @@ Daftar tugas implementasi, diturunkan dari [requirement.md](requirement.md), [sp
 ## Fase 4 — Import (`plan §Fase-4`)
 | # | Tugas | Status | Rujukan |
 |---|---|---|---|
-| 4.1 | Parser CSV **`library.csv`** (22 kolom, `judul_korea`, `link_baca_1/2/3`→`readUrls[]`, split ` \| ` alt title) | ✅✅ | spec L114–L125 |
+| 4.1 | Parser CSV **`library.csv`** (25 kolom, `judul_korea`, `link_baca_1/2/3`→`readUrls[]`, 3 kolom chapter, split ` \| ` alt title) | ✅✅ | spec §3.2 |
 | 4.2 | Parser CSV lama `metadata.csv` (19 kolom, `tahun_indo`) | ✅✅ | spec L126–L128 |
 | 4.3 | Parser JSON (28-key, coerce year_original, `source_url`→`readUrls[0]`) | ✅✅ | spec L129–L136 |
 | 4.4 | Parser TXT (2-baris, header section, nested paren, raw terpotong, Unicode, status ganda) | ✅✅ | spec L99–L113 · req L124 (NFR-08) |
@@ -110,7 +110,7 @@ Daftar tugas implementasi, diturunkan dari [requirement.md](requirement.md), [sp
 | 6.2 | Random Pick (semua/belum baca/SS–S/dari collection) | ✅ | req L97–L98 (FR-24) |
 | 6.3 | Detail page + judul Korea + Read↗ per sumber + tab (Description/Collections/Badges/Metadata) | ✅ | req L85–L86 (FR-20) · design §5-4 |
 | 6.4 | Backup/Restore — Export JSON+ZIP (semua data + cover) | ✅✅ | req L100–L101 (FR-25) · spec L192–L196 |
-| 6.5 | Export CSV format `library.csv` (22 kolom) | ✅✅ | spec L195 |
+| 6.5 | Export CSV format `library.csv` (25 kolom) | ✅✅ | spec §7 |
 | 6.6 | Restore penuh (validasi schemaVersion, transaksi) | ✅✅ | spec L196 |
 | 6.7 | PWA — manifest + service worker (installable, offline) | ✅ | req L106–L107 (FR-27) · spec L207–L211 |
 | 6.8 | Local-first check — tanpa jaringan/telemetri, persist storage | ✅ | req L103–L104 (FR-26), L117, L120 |
@@ -133,19 +133,44 @@ Daftar tugas implementasi, diturunkan dari [requirement.md](requirement.md), [sp
 
 ---
 
+## Fase 7 — Jumlah Chapter & Status Karya di UI (29 Agu 2026)
+Dipicu oleh dataset baru: `data/library.csv` kini **25 kolom** (dulu 22) — 3 kolom hitungan chapter disisipkan setelah `status`.
+
+| # | Tugas | Status | Rujukan |
+|---|---|---|---|
+| 7.1 | Parser CSV baca `jumlah_chapter`/`chapter_indo`/`chapter_sumber`; `LIBRARY_CSV_HEADER` 22→25 | ✅✅ | spec §3.2 |
+| 7.2 | Field baru `Title.totalChapters` & `Title.chapterSource` (+ `indoChapters` kini juga dari CSV) | ✅✅ | spec §2 |
+| 7.3 | Merge rule: isi 3 field chapter hanya bila masih kosong (tidak menimpa data pengguna) | ✅✅ | spec §5 · `dedupe.ts` |
+| 7.4 | `exportCsv()` 25 kolom + round-trip menjaga ketiga kolom chapter | ✅✅ | spec §7 · `backup.test.ts` |
+| 7.5 | Filter rentang chapter (`chapterMin`/`chapterMax`) + preset `< 100`/`100–199`/`200–299`/`300+` + input min/max | ✅✅ | spec §6 · design §5-3 |
+| 7.6 | Sort `Chapter (terbanyak)` & `Chapter (tersedikit)` | ✅✅ | spec §6 |
+| 7.7 | Kartu cover: baris meta **work status · jumlah chapter · tahun** di bawah judul (Library, Home, Tier View, Collections) | ✅✅ | design §5-2 |
+| 7.8 | Komponen `WorkStatusTag` (Ongoing/Complete/Hiatus/Dropped/Cancelled berwarna token; `unknown` disembunyikan) | ✅✅ | design §4 |
+| 7.9 | Halaman detail: chip `NNNch` di header + 3 baris baru di tab Metadata | ✅✅ | design §5-4 |
+| 7.10 | Revisi `spec.md` / `requirement.md` / `design.md` / `plan.md` dari 22 → 25 kolom | ✅✅ | dokumen acuan |
+
+### Catatan Fase 7
+- **Jumlah chapter = metadata katalog, BUKAN progress baca.** `chapterCount(t) = totalChapters ?? indoChapters` (helper di `src/lib/filter.ts`). Status baca tetap **biner** dan tidak ada progress bar / tab Reading Progress — keputusan design §4/§5-1 tidak berubah.
+- Cakupan data: `jumlah_chapter` 117/118 (kosong di *The Executioner*), `chapter_indo` 118/118, `chapter_sumber` 117/118. Karena fallback ke `indoChapters`, **seluruh 118 judul punya angka chapter** (rentang 58–630).
+- Distribusi work status hasil `normalizeWorkStatus` atas 118 baris: complete 58 · ongoing 48 · hiatus 9 · dropped 1 · cancelled 1 · unknown 1. Filter "Status Karya" memang sudah ada sejak Fase 5; yang sebelumnya belum tampil adalah **penandanya di kartu** — sekarang ada.
+- Verifikasi langsung di browser: Library "118 judul" dengan kartu `ONGOING · 176ch · 2023`; sort Chapter (terbanyak) → Lookism 630ch, Baek Clan 485ch, Red Storm 412ch; preset `300+` → "Show 10 titles"; detail Lookism → chip `630ch` + Metadata `Total chapter 630ch / Chapter Indo 619ch / Sumber MangaUpdates`. Nol error console.
+- **55 test lolos** (`filter` naik 7→11: cakupan kolom chapter, sort naik/turun, rentang inklusif + partisi preset = 118). `tsc --noEmit` bersih; `npm run build` sukses (12 entri precache, 607,08 KiB).
+
+---
+
 ## Catatan Status Data (29 Agu 2026)
 
-- Sumber utama sekarang **`data/library.csv`**: 118 judul (list1=30, list2=30, list3=25, list4=33), 22 kolom.
+- Sumber utama sekarang **`data/library.csv`**: 118 judul (list1=30, list2=30, list3=25, list4=33), **25 kolom** (dulu 22 — lihat Fase 7).
 - **Update 29 Agu 18:36 — scraping link selesai.** Kolom `link_baca_1/2/3` kini **terisi di seluruh 118 baris** (3 URL unik per judul; host teratas: komiku.org 98, bacakomik.my 85, komikindo.ch 74, plus ~25 host lain). Prasyarat V.9 sudah terpenuhi dan diuji lewat `parsers.test.ts`.
 - `judul_korea` masih terisi 33/118 (baru list4).
 - `covers/` berisi **118 cover** (termasuk `list4` yang sebelumnya belum bermetadata).
 
-**Ringkasan progres:** Fase 0 ✅ · Fase 1 ✅✅ (11/11) · Fase 2 ✅ (10/10) · Fase 3 ✅ (7/7) · Fase 4 ✅ (11/11) · Fase 5 ✅ (7/7) · **Fase 6 ✅ (9/9)** · Verifikasi: V.1–V.6, V.8, V.9 ✅✅; V.7 (Lighthouse manual) 🔄.
-Test suite: **51 test lolos** (`parsers` 23 · `pipeline` 10 · `coverMatcher` 4 · `filter` 7 · `backup` 7); `tsc --noEmit` bersih; `npm run build` sukses — 12 entri precache (603.28 KiB), jszip di-split jadi chunk on-demand 97.42 kB.
+**Ringkasan progres:** Fase 0 ✅ · Fase 1 ✅✅ (11/11) · Fase 2 ✅ (10/10) · Fase 3 ✅ (7/7) · Fase 4 ✅ (11/11) · Fase 5 ✅ (7/7) · Fase 6 ✅ (9/9) · **Fase 7 ✅✅ (10/10)** · Verifikasi: V.1–V.6, V.8, V.9 ✅✅; V.7 (Lighthouse manual) 🔄.
+Test suite: **55 test lolos** (`parsers` 23 · `pipeline` 10 · `coverMatcher` 4 · `filter` 11 · `backup` 7); `tsc --noEmit` bersih; `npm run build` sukses — 12 entri precache (607,08 KiB), jszip di-split jadi chunk on-demand 97,42 kB.
 
 ### Catatan Fase 6
 - Home: `StatTiles` (4 tile Bento, klik → Library terfilter) · 4 `CoverRow` scroll horizontal (Recently Added / Favorites / Belum Baca / Top Tier SS–S, baris kosong disembunyikan) · `RandomPick` 🎲 dengan lingkup semua/belum baca/SS–S/collection.
-- Backup: `src/lib/backup.ts` — `exportBackupZip()` (library.json + covers/ + manifest.json), `exportCsv()` (22 kolom, round-trip lewat `parseCsv`), `restoreBackupZip(file, 'merge'|'replace')` dengan validasi `schemaVersion` + satu transaksi Dexie. UI di `components/settings/BackupPanel.tsx` (replace butuh konfirmasi).
+- Backup: `src/lib/backup.ts` — `exportBackupZip()` (library.json + covers/ + manifest.json), `exportCsv()` (25 kolom, round-trip lewat `parseCsv`), `restoreBackupZip(file, 'merge'|'replace')` dengan validasi `schemaVersion` + satu transaksi Dexie. UI di `components/settings/BackupPanel.tsx` (replace butuh konfirmasi).
 - PWA: `navigateFallback: 'index.html'` supaya deep-link (`/library`, `/title/:id`) tetap jalan offline; `cleanupOutdatedCaches`, manifest lengkap (scope, lang, orientation, kategori), apple-touch-icon.
 - Local-first terverifikasi: nol `fetch`/`XMLHttpRequest`/WebSocket/telemetri di `src/`, nol aset pihak ketiga di `index.html`/CSS, `navigator.storage.persist()` dipanggil saat boot.
 - A11y: skip-link ke `#main`, focus trap + pemulihan fokus di Modal/BottomSheet, tablist ARIA + navigasi ←/→ di halaman detail, nol hex mentah (semua warna via token design §9).

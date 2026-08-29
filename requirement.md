@@ -65,7 +65,7 @@ Halaman kelola badge.
 - AC: Form tambah judul: cover (upload), judul, judul Korea (opsional), **satu atau beberapa URL baca**, status baca, tier, favorit, badge, work status, dan deskripsi opsional. Judul tersimpan ke library.
 
 ### FR-14 — Bulk Import (TXT / CSV / JSON)
-- AC: Impor dari file TXT (format list asli pengguna), CSV, dan JSON. Parser menangani semua format dan memetakan ke skema judul. Format CSV utama = **`library.csv` (22 kolom, 118 judul)** termasuk `judul_korea` & `link_baca_1/2/3`; format lama `metadata.csv` (19 kolom, 85 judul) dan `metadata.json` tetap didukung.
+- AC: Impor dari file TXT (format list asli pengguna), CSV, dan JSON. Parser menangani semua format dan memetakan ke skema judul. Format CSV utama = **`library.csv` (25 kolom, 118 judul)** termasuk `judul_korea`, `link_baca_1/2/3` & `jumlah_chapter`/`chapter_indo`/`chapter_sumber`; format lama `metadata.csv` (19 kolom, 85 judul) dan `metadata.json` tetap didukung.
 
 ### FR-15 — Import Preview
 - AC: Sebelum commit, tampilkan ringkasan: jumlah **detected / valid / duplicates / needs review**, dan daftar yang bisa ditinjau.
@@ -128,7 +128,7 @@ Menyusul: FR-12 Tier View, FR-23 Home, FR-24 Random Pick, tab lengkap FR-20, pen
 Aplikasi **mulai kosong**. Dataset di `data/` + `covers/` dipakai untuk **menguji importer**, bukan di-seed otomatis. Saat import, genre & tema dari metadata otomatis menjadi badge berkategori (kategori "Genre" & "Tema"); tier awal `Unrated`, favorit `false`, status `Belum Baca`.
 
 Sumber data proyek saat ini:
-- **`data/library.csv`** — format utama, **118 judul** (list1–4), 22 kolom, ada `judul_korea` & `link_baca_1/2/3`.
+- **`data/library.csv`** — format utama, **118 judul** (list1–4), 25 kolom, ada `judul_korea`, `link_baca_1/2/3` & 3 kolom hitungan chapter.
 - `data/metadata.csv` (85 judul, 19 kolom) & `data/metadata.json` (85 judul, punya `source_url`) — format lama, tetap didukung.
 - `data/list-manhwa-asli.txt` — 85 entri, 1 URL baca per entri.
 - `covers/list1..4` — **118 cover**.

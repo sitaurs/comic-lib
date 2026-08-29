@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ReadingStatus, Tier } from '../../db/types';
+import type { ReadingStatus, Tier, WorkStatus } from '../../db/types';
 
 /** design §4 — Tier chip: pill kecil berwarna sesuai tier. */
 const TIER_CLASS: Record<Tier, string> = {
@@ -145,6 +145,30 @@ export function ReadingStatusPill({ status }: { status: ReadingStatus }) {
       }`}
     >
       {read ? '✓' : '○'} {read ? 'Pernah Baca' : 'Belum Baca'}
+    </span>
+  );
+}
+
+/**
+ * design §4/§5-4 — work status (ONGOING/COMPLETE/…) sebagai tag ringkas.
+ * Dipakai di kartu cover (Library, Home, Tier View) & halaman detail.
+ * Warna memakai token tier yang sudah ada; `unknown` disembunyikan agar
+ * kartu tanpa metadata tetap tenang.
+ */
+const WORK_STATUS_TAG: Record<Exclude<WorkStatus, 'unknown'>, { label: string; cls: string }> = {
+  ongoing: { label: 'Ongoing', cls: 'text-tier-b' },
+  complete: { label: 'Complete', cls: 'text-tier-a' },
+  hiatus: { label: 'Hiatus', cls: 'text-tier-c' },
+  dropped: { label: 'Dropped', cls: 'text-tier-d' },
+  cancelled: { label: 'Cancelled', cls: 'text-tier-d' },
+};
+
+export function WorkStatusTag({ status }: { status: WorkStatus }) {
+  if (status === 'unknown') return null;
+  const meta = WORK_STATUS_TAG[status];
+  return (
+    <span className={`font-semibold uppercase tracking-wide ${meta.cls}`} title={meta.label}>
+      {meta.label}
     </span>
   );
 }

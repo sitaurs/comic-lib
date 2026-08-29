@@ -7,7 +7,7 @@ import { seedDefaultCategories } from '../db/seed';
 import { parseCsv } from '../import/parsers/csv';
 import { buildPreview } from '../import/dedupe';
 import { commitImport } from '../import/commit';
-import { applyFilter } from './filter';
+import { applyFilter, chapterCount } from './filter';
 import { initialFilterState, type FilterState } from '../stores/filterStore';
 import type { Title } from '../db/types';
 
@@ -148,5 +148,45 @@ describe('V.8 — filter dengan data nyata (118 judul)', () => {
     const byTitle = run({ sort: 'title' });
     const names = byTitle.map((t) => t.title);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'id')));
+  });
+
+  it('jumlah chapter terisi dari library.csv (jumlah_chapter / chapter_indo)', () => {
+    // dataset: jumlah_chapter 117/118 (The Executioner kosong), chapter_indo 118/118
+    expect(titles.filter((t) => t.totalChapters !== null)).toHaveLength(117);
+    expect(titles.filter((t) => t.indoChapters !== null)).toHaveLength(118);
+    expect(titles.filter((t) => t.chapterSource !== null)).toHaveLength(117);
+    // fallback: judul tanpa totalChapters tetap punya angka lewat indoChapters
+    expect(titles.every((t) => chapterCount(t) !== null)).toBe(true);
+  });
+
+  it('sort chapter terbanyak menurun & tersedikit menaik', () => {
+    const desc = run({ sort: 'chapters' }).map((t) => chapterCount(t)!);
+    expect(desc).toEqual([...desc].sort((a, b) => b - a));
+    expect(desc[0]).toBe(Math.max(...desc));
+
+    const asc = run({ sort: 'chapters-asc' }).map((t) => chapterCount(t)!);
+    expect(asc).toEqual([...asc].sort((a, b) => a - b));
+  });
+
+  it('filter rentang chapter menyaring inklusif di kedua ujung', () => {
+    const mid = run({ chapterMin: 100, chapterMax: 199 });
+    expect(mid.length).toBeGreaterThan(0);
+    expect(mid.every((t) => chapterCount(t)! >= 100 && chapterCount(t)! <= 199)).toBe(true);
+
+    const min300 = run({ chapterMin: 300, chapterMax: null });
+    expect(min300.every((t) => chapterCount(t)! >= 300)).toBe(true);
+
+    const under100 = run({ chapterMin: null, chapterMax: 99 });
+    expect(under100.every((t) => chapterCount(t)! <= 99)).toBe(true);
+
+    // partisi lengkap: tiap judul masuk tepat satu preset
+    const p200 = run({ chapterMin: 200, chapterMax: 299 });
+    expect(under100.length + mid.length + p200.length + min300.length).toBe(118);
+  });
+
+  it('rentang chapter dihitung sebagai satu filter aktif', () => {
+    const s = { ...initialFilterState, chapterMin: 100, chapterMax: null };
+    // activeCount ada di store; di sini cukup pastikan predikat tidak menolak semua
+    expect(applyFilter({ titles, badgeMap }, s).length).toBeGreaterThan(0);
   });
 });

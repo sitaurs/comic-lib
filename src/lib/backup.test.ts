@@ -13,7 +13,7 @@ import type { Title } from '../db/types';
 
 /**
  * V.5 (todos.md) — backup → wipe → restore identik (spec L218), termasuk
- * `readUrls` & `titleKo`. Plus export CSV 22 kolom yang bisa di-import ulang
+ * `readUrls` & `titleKo`. Plus export CSV 25 kolom yang bisa di-import ulang
  * (spec L194, req FR-25).
  */
 const root = resolve(__dirname, '../..');
@@ -200,16 +200,16 @@ describe('V.5 — backup → wipe → restore', () => {
   });
 });
 
-describe('export CSV (spec L194, 22 kolom library.csv)', () => {
+describe('export CSV (spec §3.2, 25 kolom library.csv)', () => {
   beforeEach(wipe);
 
-  it('22 kolom & 118 baris, alt title memakai pipe', async () => {
+  it('25 kolom & 118 baris, alt title memakai pipe', async () => {
     await importLibrary();
     const csv = await exportCsv();
 
     const lines = csv.split('\n');
     expect(lines[0]).toBe(LIBRARY_CSV_HEADER.join(','));
-    expect(LIBRARY_CSV_HEADER).toHaveLength(22);
+    expect(LIBRARY_CSV_HEADER).toHaveLength(25);
 
     // baris data dihitung lewat parser (sinopsis memuat newline di dalam quote)
     const reparsed = parseCsv(csv);
@@ -241,6 +241,10 @@ describe('export CSV (spec L194, 22 kolom library.csv)', () => {
       expect(p!.yearOriginal).toBe(t.yearOriginal);
       expect(p!.type).toBe(t.type);
       expect(p!.statusRaw).toBe(t.statusRaw);
+      // 3 kolom hitungan chapter ikut round-trip (spec §3.2)
+      expect(p!.totalChapters).toBe(t.totalChapters);
+      expect(p!.indoChapters).toBe(t.indoChapters);
+      expect(p!.chapterSource).toBe(t.chapterSource);
       expect(p!.synopsisId).toBe(t.synopsisId);
       expect(p!.synopsisEn).toBe(t.synopsisEn);
       // readUrls[0..2] → link_baca_1/2/3

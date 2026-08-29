@@ -10,7 +10,7 @@ Aplikasi library manhwa/manga pribadi, **local-first** (IndexedDB, offline, PWA)
 
 | File | Judul | Catatan |
 |---|---|---|
-| `data/library.csv` | **118** | Format utama (22 kolom), ada `judul_korea` + `link_baca_1/2/3` |
+| `data/library.csv` | **118** | Format utama (25 kolom), ada `judul_korea` + `link_baca_1/2/3` + `jumlah_chapter`/`chapter_indo`/`chapter_sumber` |
 | `data/metadata.csv` | 85 | Format lama (19 kolom), ada `tahun_indo` |
 | `data/metadata.json` | 85 | Punya `source_url` (72 komiku + 13 bacakomik) |
 | `data/list-manhwa-asli.txt` | 85 | 1 URL baca per entri |
@@ -41,7 +41,7 @@ Aplikasi library manhwa/manga pribadi, **local-first** (IndexedDB, offline, PWA)
 - Klik badge → filter library.
 
 ### Fase 4 — Import
-- Parser CSV `library.csv` (22 kolom, `judul_korea`, `link_baca_1/2/3` → `readUrls[]`) + format lama CSV/JSON/TXT + normalisasi status + genre→badge.
+- Parser CSV `library.csv` (25 kolom, `judul_korea`, `link_baca_1/2/3` → `readUrls[]`, 3 kolom chapter) + format lama CSV/JSON/TXT + normalisasi status + genre→badge.
 - Import Preview (detected/valid/duplicates/needs review) + dedup Skip/Replace/Merge (Merge menggabungkan `readUrls`).
 - Bulk Cover Import (gambar/ZIP + slug matcher).
 - **Validasi dengan dataset asli** (`data/library.csv` 118 judul + `covers/list1..4` 118 cover).

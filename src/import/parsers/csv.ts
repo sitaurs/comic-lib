@@ -33,6 +33,10 @@ export const LIBRARY_CSV_HEADER = [
   'tahun_asli',
   'tipe',
   'status',
+  // 3 kolom hitungan chapter (spec §3.2) — disisipkan setelah `status`
+  'jumlah_chapter',
+  'chapter_indo',
+  'chapter_sumber',
   'author',
   'skor_anilist',
   'skor_mangaupdates',
@@ -92,6 +96,15 @@ function rowToParsed(row: Row, index: number, isLibrary: boolean): ParsedTitle {
   p.yearOriginal = toNumber(blankToNull(row['tahun_asli']));
   // library.csv TIDAK punya tahun_indo → null (spec L122)
   p.yearIndo = isLibrary ? null : toNumber(blankToNull(row['tahun_indo']));
+
+  // Hitungan chapter — hanya ada di library.csv (25 kolom); metadata.csv lama
+  // tidak punya ketiganya. Ini metadata katalog (total chapter tersedia),
+  // BUKAN progress baca — status baca tetap biner (design §4).
+  if (isLibrary) {
+    p.totalChapters = toNumber(blankToNull(row['jumlah_chapter']));
+    p.indoChapters = toNumber(blankToNull(row['chapter_indo']));
+    p.chapterSource = blankToNull(row['chapter_sumber']);
+  }
 
   p.authors = splitComma(row['author']);
   p.scoreAnilist = toNumber(blankToNull(row['skor_anilist']));

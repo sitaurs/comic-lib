@@ -22,6 +22,11 @@ function matchesSearch(t: Title, needle: string): boolean {
   return haystack.some((h) => h.includes(needle));
 }
 
+/** Jumlah chapter yang dipakai untuk filter/sort: total sumber, fallback ke Indo. */
+export function chapterCount(t: Title): number | null {
+  return t.totalChapters ?? t.indoChapters;
+}
+
 export function applyFilter(
   { titles, badgeMap, collectionMembers }: FilterInput,
   f: FilterState,
@@ -29,6 +34,7 @@ export function applyFilter(
   const needle = normalizeKey(f.search);
   const hasBadgeInclude = f.badgeInclude.size > 0;
   const hasBadgeExclude = f.badgeExclude.size > 0;
+  const hasChapterRange = f.chapterMin !== null || f.chapterMax !== null;
 
   const result = titles.filter((t) => {
     // filter murah lebih dulu (spec L184)
@@ -37,6 +43,14 @@ export function applyFilter(
     if (f.favoriteOnly && !t.favorite) return false;
     if (f.workStatus.size > 0 && !f.workStatus.has(t.workStatus)) return false;
     if (collectionMembers && !collectionMembers.has(t.id)) return false;
+
+    if (hasChapterRange) {
+      const n = chapterCount(t);
+      // judul tanpa data chapter tidak bisa memenuhi rentang apa pun
+      if (n === null) return false;
+      if (f.chapterMin !== null && n < f.chapterMin) return false;
+      if (f.chapterMax !== null && n > f.chapterMax) return false;
+    }
 
     if (hasBadgeInclude || hasBadgeExclude) {
       const owned = badgeMap.get(t.id) ?? EMPTY_SET;
@@ -90,6 +104,19 @@ export function sortTitles(titles: Title[], sort: FilterState['sort']): Title[] 
           (b.yearOriginal ?? -Infinity) - (a.yearOriginal ?? -Infinity) ||
           a.title.localeCompare(b.title, 'id'),
       );
+    case 'chapters':
+      // terbanyak dulu; tanpa data chapter ditaruh paling akhir
+      return out.sort(
+        (a, b) =>
+          (chapterCount(b) ?? -Infinity) - (chapterCount(a) ?? -Infinity) ||
+          a.title.localeCompare(b.title, 'id'),
+      );
+    case 'chapters-asc':
+      return out.sort(
+        (a, b) =>
+          (chapterCount(a) ?? Infinity) - (chapterCount(b) ?? Infinity) ||
+          a.title.localeCompare(b.title, 'id'),
+      );
     case 'recent':
     default:
       return out.sort((a, b) => b.createdAt - a.createdAt);
@@ -101,4 +128,6 @@ export const SORT_LABELS: Record<FilterState['sort'], string> = {
   title: 'Judul (A–Z)',
   tier: 'Tier (SS→)',
   year: 'Tahun (terbaru)',
+  chapters: 'Chapter (terbanyak)',
+  'chapters-asc': 'Chapter (tersedikit)',
 };

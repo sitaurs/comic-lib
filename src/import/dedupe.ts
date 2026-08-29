@@ -190,6 +190,9 @@ export function mergeIntoExisting(existing: Title, parsed: ParsedTitle): Partial
     patch.workStatus = parsed.workStatus;
   if (existing.indoChapters === null && parsed.indoChapters !== null)
     patch.indoChapters = parsed.indoChapters;
+  if (existing.totalChapters === null && parsed.totalChapters !== null)
+    patch.totalChapters = parsed.totalChapters;
+  if (!existing.chapterSource && parsed.chapterSource) patch.chapterSource = parsed.chapterSource;
   if (!existing.indoStatus && parsed.indoStatus) patch.indoStatus = parsed.indoStatus;
   if (!existing.synopsisId && parsed.synopsisId) patch.synopsisId = parsed.synopsisId;
   if (!existing.synopsisEn && parsed.synopsisEn) patch.synopsisEn = parsed.synopsisEn;

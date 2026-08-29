@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import type { Title } from '../../db/types';
 import { useCoverUrl } from '../../hooks/useCoverUrl';
-import { StatusDot, TierChip } from '../ui/Chip';
+import { chapterCount } from '../../lib/filter';
+import { StatusDot, TierChip, WorkStatusTag } from '../ui/Chip';
 
 /**
  * Kartu cover — design §5-2 & §8.
@@ -24,6 +25,7 @@ export function CoverCard({
   onToggleSelect?: (t: Title) => void;
 }) {
   const url = useCoverUrl(title.coverId);
+  const chapters = chapterCount(title);
 
   const body = (
     <>
@@ -92,9 +94,21 @@ export function CoverCard({
         >
           {title.title}
         </p>
-        {!compact && title.yearOriginal && (
-          <p className="mt-0.5 text-[10px] text-text-muted">{title.yearOriginal}</p>
-        )}
+        {/* Baris meta: status karya + jumlah chapter (+ tahun bila ada ruang).
+            Jumlah chapter = metadata katalog, BUKAN progress baca (design §5-1). */}
+        <div
+          className={`mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 ${
+            compact ? 'text-[9px]' : 'text-[10px]'
+          }`}
+        >
+          <WorkStatusTag status={title.workStatus} />
+          {chapters !== null && (
+            <span className="tabular-nums text-text-secondary">{chapters}ch</span>
+          )}
+          {!compact && title.yearOriginal && (
+            <span className="text-text-muted">{title.yearOriginal}</span>
+          )}
+        </div>
       </div>
     </>
   );

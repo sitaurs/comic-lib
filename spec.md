@@ -49,7 +49,9 @@ interface Title {
   scoreAnilist: number | null;      // 0..100
   scoreMangaupdates: number | null; // 0..10
   statusRaw: string | null;         // teks mentah sumber
-  indoChapters: number | null;      // hitungan chapter Indo (TXT)
+  totalChapters: number | null;     // `jumlah_chapter` — total chapter di sumber asli
+  chapterSource: string | null;     // `chapter_sumber` — asal hitungan (MangaUpdates/AniList)
+  indoChapters: number | null;      // hitungan chapter Indo (`chapter_indo` / TXT)
   indoStatus: 'TAMAT' | 'ONGOING' | null; // bracket TXT (sinyal terpisah)
   synopsisId: string | null;
   synopsisEn: string | null;
@@ -88,7 +90,7 @@ Ada 3 sumber import; semua mengalir ke pipeline yang sama: **parse → normalisa
 **Sumber data proyek (acuan):**
 | File | Judul | Catatan |
 |---|---|---|
-| `data/library.csv` | **118** (list1–4) | **Format utama**, 22 kolom, ada `judul_korea` + `link_baca_1/2/3` (kolom link masih kosong, sedang di-scrape) |
+| `data/library.csv` | **118** (list1–4) | **Format utama**, 25 kolom, ada `judul_korea` + `link_baca_1/2/3` + 3 kolom hitungan chapter |
 | `data/metadata.csv` | 85 (list1–3) | Format lama 19 kolom, ada `tahun_indo`, tanpa link baca |
 | `data/metadata.json` | 85 (list1–3) | Punya `source_url` (1 URL baca per judul) |
 | `data/list-manhwa-asli.txt` | 85 (list1–3) | 1 URL baca per entri |
@@ -111,11 +113,12 @@ Aturan parser:
 - Simpan **dua sinyal status independen**: `indoStatus` (bracket) & `workStatus` (hasil normalisasi `statusRaw`) — keduanya bisa berbeda.
 - `indoChapters` dari `Indo NNNch` berbeda dari chapter sumber; keduanya dipertahankan.
 
-### 3.2 CSV — `library.csv` (format utama, 22 kolom)
+### 3.2 CSV — `library.csv` (format utama, 25 kolom)
 Sumber import **utama**. Header (urut tetap):
 ```
-list,no,judul,judul_korea,judul_alternatif,genre_terverifikasi,genre_1sumber,tema,tahun_asli,tipe,status,author,skor_anilist,skor_mangaupdates,skor_mal,sumber,cover_file,link_baca_1,link_baca_2,link_baca_3,sinopsis_id,sinopsis_en
+list,no,judul,judul_korea,judul_alternatif,genre_terverifikasi,genre_1sumber,tema,tahun_asli,tipe,status,jumlah_chapter,chapter_indo,chapter_sumber,author,skor_anilist,skor_mangaupdates,skor_mal,sumber,cover_file,link_baca_1,link_baca_2,link_baca_3,sinopsis_id,sinopsis_en
 ```
+- **Update 29 Agu 2026:** 3 kolom hitungan chapter disisipkan setelah `status` (dulu 22 kolom): `jumlah_chapter` (terisi 117/118 — kosong di *The Executioner*), `chapter_indo` (118/118), `chapter_sumber` (117/118; `MangaUpdates+AniList` 58, `MangaUpdates` 57). Mapping: `jumlah_chapter→totalChapters`, `chapter_indo→indoChapters`, `chapter_sumber→chapterSource`. Ini **metadata katalog** (total chapter tersedia di sumber), **bukan progress baca** — status baca tetap biner (design §4). `metadata.csv` lama tidak punya ketiganya → ketiga field `null`.
 - **118 judul**: list1=30, list2=30, list3=25, **list4=33**.
 - Gunakan **parser RFC-4180 sungguhan** (papaparse) — sinopsis berisi koma/quote/markdown.
 - Mapping: `judul→title`, **`judul_korea→titleKo`**, `judul_alternatif→altTitles` (**split ` | `** pipe, bukan koma — alt title sendiri boleh mengandung koma), `genre_terverifikasi`+`genre_1sumber→badges` kategori "Genre" (split `, `), `tema→badges` kategori "Tema" (split `, `), `tahun_asli→yearOriginal`, `tipe→type`, `status→statusRaw`, `author→authors` (split `, `), `skor_anilist→scoreAnilist`, `skor_mangaupdates→scoreMangaupdates`, `skor_mal` (selalu kosong → null), `sumber→daftar sumber metadata` (split `+`, bukan URL baca), `cover_file→path cover`, **`link_baca_1/2/3→readUrls[]`** (buang yang kosong, `source` diturunkan dari host), `sinopsis_id→synopsisId`, `sinopsis_en→synopsisEn`.
@@ -176,23 +179,26 @@ interface FilterState {
   badgeInclude: Set<string>;                // badge ids
   badgeExclude: Set<string>;
   badgeMatch: 'ALL' | 'ANY';
+  chapterMin: number | null;                // rentang jumlah chapter (inklusif)
+  chapterMax: number | null;
   collectionId: string | null;
-  sort: 'title' | 'recent' | 'tier' | 'year';
+  sort: 'title' | 'recent' | 'tier' | 'year' | 'chapters' | 'chapters-asc';
 }
 ```
 Evaluasi:
 1. Ambil kandidat via index Dexie sesuai filter murah (status/tier/favorite).
-2. Untuk badge: dari `titleBadges` bangun `titleId → Set<badgeId>`.
+2. **Rentang chapter**: bandingkan `chapterCount(t) = totalChapters ?? indoChapters` — inklusif di kedua ujung; judul tanpa data chapter tidak memenuhi rentang apa pun. Preset UI: `< 100`, `100–199`, `200–299`, `300+`, plus input min/max manual. Seluruh rentang dihitung sebagai **satu** filter aktif di `activeCount()`.
+3. Untuk badge: dari `titleBadges` bangun `titleId → Set<badgeId>`.
    - **Match ALL**: `badgeInclude ⊆ titleBadges[t]`.
    - **Match ANY**: irisan `badgeInclude ∩ titleBadges[t]` tak kosong.
    - **Exclude**: `badgeExclude ∩ titleBadges[t]` harus kosong.
-3. Terapkan search (judul + titleKo + altTitles), lalu sort. Tampilkan count live untuk "Show N titles".
+4. Terapkan search (judul + titleKo + altTitles), lalu sort. `chapters` = terbanyak dulu, `chapters-asc` = tersedikit dulu; tanpa data chapter selalu di akhir. Tampilkan count live untuk "Show N titles".
 - Klik badge di kartu → set `badgeInclude = {badgeId}`, `badgeMatch='ANY'`, navigate ke Library.
 
 ## 7. Backup / Restore
 
 - **Export penuh (ZIP)**: `library.json` (semua tabel kecuali blob) + folder `covers/<coverId>.<ext>` (Blob) + `manifest.json` (schemaVersion, count, tanggal). Portable lintas perangkat.
-- **Export CSV**: subset judul dengan kolom mengikuti `library.csv` (22 kolom, termasuk `judul_korea` & `link_baca_1/2/3`) untuk interop dua arah.
+- **Export CSV**: subset judul dengan kolom mengikuti `library.csv` (25 kolom, termasuk `judul_korea`, `link_baca_1/2/3` & 3 kolom hitungan chapter) untuk interop dua arah.
 - **Restore**: baca ZIP, validasi schemaVersion, tulis ulang semua store dalam transaksi (mode replace atau merge). Cover Blob dimuat kembali ke store `covers`.
 
 ## 8. State / Store Contract (Zustand)
@@ -212,7 +218,7 @@ Data reaktif diutamakan lewat `useLiveQuery` agar UI selalu sinkron dengan Index
 
 ## 10. Verifikasi Teknis
 
-- Unit test parser: **`library.csv` → 118 judul** (22 kolom, `judul_korea` terisi, `link_baca_*` kosong → `readUrls: []`); `metadata.csv` → 85; `metadata.json` → 85 dengan `readUrls[0]` dari `source_url`; TXT → 85. Cek judul Unicode, raw terpotong, status ganda, coercion tahun, split ` | ` pada alt title.
+- Unit test parser: **`library.csv` → 118 judul** (25 kolom, `judul_korea` terisi, `link_baca_*` kosong → `readUrls: []`); `metadata.csv` → 85; `metadata.json` → 85 dengan `readUrls[0]` dari `source_url`; TXT → 85. Cek judul Unicode, raw terpotong, status ganda, coercion tahun, split ` | ` pada alt title.
 - Test dedup: import ulang → semua terdeteksi duplikat; test **Merge mengisi `readUrls` dari JSON/TXT ke record hasil library.csv** tanpa menimpa tier/favorit/badge.
 - Test cover matcher: folder `covers/list1..4` → **118 ter-link** saat sumber `library.csv` (dan 33 `list4` jadi unmatched bila sumber metadata lama).
 - Test backup→wipe→restore identik (termasuk `readUrls` & `titleKo`).

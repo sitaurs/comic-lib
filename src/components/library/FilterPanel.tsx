@@ -25,6 +25,14 @@ const WORK: { value: WorkStatus; label: string }[] = [
   { value: 'unknown', label: 'Tidak diketahui' },
 ];
 
+/** Preset rentang chapter — `null` = tanpa batas di sisi itu. */
+const CHAPTER_PRESETS: { label: string; min: number | null; max: number | null }[] = [
+  { label: '< 100', min: null, max: 99 },
+  { label: '100–199', min: 100, max: 199 },
+  { label: '200–299', min: 200, max: 299 },
+  { label: '300+', min: 300, max: null },
+];
+
 export function FilterPanel({
   resultCount,
   onApply,
@@ -111,6 +119,50 @@ export function FilterPanel({
               {w.label}
             </FilterChip>
           ))}
+        </div>
+      </Section>
+
+      <Section
+        title="Jumlah Chapter"
+        aside={
+          filter.chapterMin !== null || filter.chapterMax !== null ? (
+            <button
+              type="button"
+              onClick={() => filter.setChapterRange(null, null)}
+              className="text-xs text-text-muted transition-colors duration-fast hover:text-text-primary"
+            >
+              Reset
+            </button>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-wrap gap-2">
+          {CHAPTER_PRESETS.map((p) => (
+            <FilterChip
+              key={p.label}
+              active={filter.chapterMin === p.min && filter.chapterMax === p.max}
+              onClick={() =>
+                filter.chapterMin === p.min && filter.chapterMax === p.max
+                  ? filter.setChapterRange(null, null)
+                  : filter.setChapterRange(p.min, p.max)
+              }
+            >
+              {p.label}
+            </FilterChip>
+          ))}
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <ChapterInput
+            label="Min chapter"
+            value={filter.chapterMin}
+            onChange={(v) => filter.setChapterRange(v, filter.chapterMax)}
+          />
+          <span className="text-xs text-text-muted">–</span>
+          <ChapterInput
+            label="Max chapter"
+            value={filter.chapterMax}
+            onChange={(v) => filter.setChapterRange(filter.chapterMin, v)}
+          />
         </div>
       </Section>
 
@@ -262,5 +314,34 @@ function FilterChip({
     >
       {children}
     </button>
+  );
+}
+
+/** Input angka rentang chapter — kosong = tanpa batas. */
+function ChapterInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number | null;
+  onChange: (v: number | null) => void;
+}) {
+  return (
+    <input
+      type="number"
+      min={0}
+      inputMode="numeric"
+      aria-label={label}
+      placeholder={label}
+      value={value === null ? '' : String(value)}
+      onChange={(e) => {
+        const raw = e.target.value.trim();
+        if (!raw) return onChange(null);
+        const n = Number(raw);
+        onChange(Number.isFinite(n) && n >= 0 ? Math.floor(n) : null);
+      }}
+      className="w-full rounded-lg border border-hairline bg-elevated px-2.5 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:border-brand/60 focus:outline-none"
+    />
   );
 }

@@ -83,13 +83,13 @@ Dot warna kecil di kartu untuk status baca biner: **Pernah Baca** (hijau) & **Be
 **4 stat tile** (Bento): Total, Favorites, jumlah SS, Belum Baca. Di bawahnya **baris cover Recently Added** (scroll horizontal) dan entri **Random Pick** 🎲. (Tanpa "Continue Reading" — status baca biner, tidak melacak progress chapter.)
 
 ### 2 — Library
-Toolbar: **Search · Filter · Sort · Grid/Compact · Add Title**. Grid cover padat; tiap kartu = cover + **tier chip** + **dot status**. Mode Compact lebih rapat. Hover: zoom + gradient overlay + ••• Quick Edit.
+Toolbar: **Search · Filter · Sort · Grid/Compact · Add Title**. Grid cover padat; tiap kartu = cover + **tier chip** + **dot status**, dan di bawah cover: **judul** lalu baris meta **work status · jumlah chapter · tahun**. Work status memakai warna token (Ongoing hijau `tier-b`, Complete biru `tier-a`, Hiatus oranye `tier-c`, Dropped/Cancelled merah `tier-d`); `unknown` disembunyikan. Jumlah chapter = `totalChapters ?? indoChapters` — **metadata katalog, bukan progress baca**. Mode Compact menyembunyikan tahun & memakai teks lebih kecil. Hover: zoom + gradient overlay + ••• Quick Edit.
 
 ### 3 — Advanced Filter
-Panel/section: **Reading**, **Tier**, **Favorite**, **Badges** (dengan **Match ALL/ANY**), **Exclude**, tombol **Clear**, dan tombol utama **Show N titles** (count live).
+Panel/section: **Reading**, **Tier**, **Favorite**, **Status Karya**, **Jumlah Chapter** (preset `< 100` / `100–199` / `200–299` / `300+` + input min/max), **Badges** (dengan **Match ALL/ANY**), **Exclude**, tombol **Clear**, dan tombol utama **Show N titles** (count live). Sort menyertakan **Chapter (terbanyak)** & **Chapter (tersedikit)**.
 
 ### 4 — Manga Detail
-Cover besar di kiri; kanan: judul (+ judul Korea kecil di bawahnya), tier / ♥ / ✓ status baca / work status (ONGOING/COMPLETE); tombol **Read ↗ per sumber** (mis. `Read ↗ Komiku`, `Read ↗ BacaKomik`; disembunyikan bila judul belum punya link) & **Edit**. Tab: **Description · Collections · Badges · Metadata**. (Tanpa progress bar chapter & tab Reading Progress/History — status baca biner.)
+Cover besar di kiri; kanan: judul (+ judul Korea kecil di bawahnya), tier / ♥ / ✓ status baca / work status (ONGOING/COMPLETE) / jumlah chapter (`NNNch`); tombol **Read ↗ per sumber** (mis. `Read ↗ Komiku`, `Read ↗ BacaKomik`; disembunyikan bila judul belum punya link) & **Edit**. Tab: **Description · Collections · Badges · Metadata**. (Tanpa progress bar chapter & tab Reading Progress/History — status baca biner.)
 
 ### 5 — Tier View
 Baris per tier **SS → S → A → B → C → D → Unrated**, tiap baris berisi cover + jumlah judul (mis. SS 36, S 58, A 97, …).

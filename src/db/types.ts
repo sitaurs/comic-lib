@@ -42,7 +42,9 @@ export interface Title {
   scoreAnilist: number | null; // 0..100
   scoreMangaupdates: number | null; // 0..10
   statusRaw: string | null; // teks mentah sumber
-  indoChapters: number | null; // hitungan chapter Indo (TXT)
+  totalChapters: number | null; // `jumlah_chapter` — total chapter di sumber asli
+  chapterSource: string | null; // `chapter_sumber` — asal hitungan (MangaUpdates/AniList)
+  indoChapters: number | null; // hitungan chapter Indo (`chapter_indo` / TXT)
   indoStatus: 'TAMAT' | 'ONGOING' | null; // bracket TXT (sinyal terpisah)
   synopsisId: string | null;
   synopsisEn: string | null;
@@ -117,6 +119,8 @@ export function emptyTitle(id: string, now = Date.now()): Title {
     scoreAnilist: null,
     scoreMangaupdates: null,
     statusRaw: null,
+    totalChapters: null,
+    chapterSource: null,
     indoChapters: null,
     indoStatus: null,
     synopsisId: null,

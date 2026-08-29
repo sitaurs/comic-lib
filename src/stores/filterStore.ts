@@ -5,7 +5,7 @@ import type { ReadingStatus, Tier, WorkStatus } from '../db/types';
  * filterStore — spec §6 L166–L190.
  * Include/Exclude independen (req FR-09), Match ALL/ANY untuk badge (FR-10).
  */
-export type SortKey = 'title' | 'recent' | 'tier' | 'year';
+export type SortKey = 'title' | 'recent' | 'tier' | 'year' | 'chapters' | 'chapters-asc';
 export type BadgeMatch = 'ALL' | 'ANY';
 
 export interface FilterState {
@@ -14,6 +14,9 @@ export interface FilterState {
   tiers: Set<Tier>; // include
   favoriteOnly: boolean;
   workStatus: Set<WorkStatus>;
+  /** Rentang jumlah chapter (inklusif); null = tanpa batas. */
+  chapterMin: number | null;
+  chapterMax: number | null;
   badgeInclude: Set<string>; // badge ids
   badgeExclude: Set<string>;
   badgeMatch: BadgeMatch;
@@ -27,6 +30,7 @@ interface FilterActions {
   toggleTier: (v: Tier) => void;
   setFavoriteOnly: (v: boolean) => void;
   toggleWorkStatus: (v: WorkStatus) => void;
+  setChapterRange: (min: number | null, max: number | null) => void;
   toggleBadgeInclude: (id: string) => void;
   toggleBadgeExclude: (id: string) => void;
   setBadgeMatch: (v: BadgeMatch) => void;
@@ -44,6 +48,8 @@ export const initialFilterState: FilterState = {
   tiers: new Set(),
   favoriteOnly: false,
   workStatus: new Set(),
+  chapterMin: null,
+  chapterMax: null,
   badgeInclude: new Set(),
   badgeExclude: new Set(),
   badgeMatch: 'ALL',
@@ -66,6 +72,7 @@ export const useFilterStore = create<FilterState & FilterActions>((set, get) => 
   toggleTier: (v) => set((s) => ({ tiers: toggleIn(s.tiers, v) })),
   setFavoriteOnly: (favoriteOnly) => set({ favoriteOnly }),
   toggleWorkStatus: (v) => set((s) => ({ workStatus: toggleIn(s.workStatus, v) })),
+  setChapterRange: (chapterMin, chapterMax) => set({ chapterMin, chapterMax }),
 
   toggleBadgeInclude: (id) =>
     set((s) => {
@@ -104,6 +111,7 @@ export const useFilterStore = create<FilterState & FilterActions>((set, get) => 
       s.badgeExclude.size +
       (s.favoriteOnly ? 1 : 0) +
       (s.collectionId ? 1 : 0) +
+      (s.chapterMin !== null || s.chapterMax !== null ? 1 : 0) +
       (s.search.trim() ? 1 : 0)
     );
   },
